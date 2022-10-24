@@ -71,7 +71,10 @@ export default async ({ services, exceptions, logger, getSchema, env, respond })
                     picture: res.profile?.pictureUrl,
                     club_name: res.profile?.clubName,
                     club_picture: res.profile?.clubShield?.pictureUrl
-                })).catch(err => null)
+                })).catch(err => {
+                    console.log(err)
+                    return null
+                })
 
                 if (!profile) return res.status(400).json("Can't get profile")
 
