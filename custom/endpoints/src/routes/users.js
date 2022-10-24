@@ -43,6 +43,38 @@ export default async ({ services, exceptions, logger, getSchema, env, respond })
         respond
     ]);
 
+    router.get('/me', [
+        async (req, res, next) => {
+            try {
+                let user_id = req.accountability.user
+
+                let user = await directusUserService.readOne(user_id, {
+                    fields: [
+                        "id",
+                        "email",
+                        "nickname",
+                        "avatar",
+                        "sorare_account.id",
+                        "sorare_account.slug",
+                        "sorare_account.nickname",
+                        "sorare_account.picture",
+                        "sorare_account.club_name",
+                        "sorare_account.club_picture",
+                    ]
+                })
+
+                res.locals.cache = false
+                res.locals.payload = user
+                return next()
+            }
+            catch (err) {
+                console.log(err.message)
+                return res.status(500).send()
+            }
+        },
+        respond
+    ]);
+
     router.post('/me/sorare', [
         async (req, res, next) => {
             try {
