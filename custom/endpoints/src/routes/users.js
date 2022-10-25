@@ -63,8 +63,6 @@ export default async ({ services, exceptions, logger, getSchema, env, respond })
                     ]
                 })
 
-                console.log(user)
-
                 res.locals.cache = false
                 res.locals.payload = user
                 return next()
@@ -83,10 +81,6 @@ export default async ({ services, exceptions, logger, getSchema, env, respond })
                 let manager = req.accountability.user
                 let { code } = req.body
 
-                console.log({
-                    manager,
-                    code
-                })
 
                 // * GET CURRENT USER FROM TOKEN
                 let profile = await axios({
@@ -106,7 +100,7 @@ export default async ({ services, exceptions, logger, getSchema, env, respond })
                     club_name: res.profile?.clubName,
                     club_picture: res.profile?.clubShield?.pictureUrl
                 })).catch(err => {
-                    console.log(err)
+                    console.log(err.message)
                     return null
                 })
 

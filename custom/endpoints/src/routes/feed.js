@@ -34,7 +34,6 @@ export default async ({ services, exceptions, logger, getSchema, env, respond, c
 
         let redisVotes = await redisClient.GET(`votes:report_${report_id}`)
         if (redisVotes) {
-            console.log("votes from cache")
             return JSON.parse(redisVotes)
         }
 
@@ -178,16 +177,6 @@ export default async ({ services, exceptions, logger, getSchema, env, respond, c
                     sorare = false,
                     favorites,
                 } = JSON.parse(req.query.filter || "{}")
-
-                console.log({
-                    user,
-                    category,
-                    players,
-                    teams,
-                    competitions,
-                    sorare,
-                    favorites,
-                })
 
                 let sorare_cards = []
                 if (sorare) {
