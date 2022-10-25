@@ -63,6 +63,8 @@ export default async ({ services, exceptions, logger, getSchema, env, respond })
                     ]
                 })
 
+                console.log(user)
+
                 res.locals.cache = false
                 res.locals.payload = user
                 return next()

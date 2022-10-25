@@ -20,6 +20,8 @@ export default async ({ services, exceptions, logger, getSchema, env, respond, c
     const reportTeamService = new ItemsService('reports_teams', { schema: await getSchema() });
     const reportCompetitionService = new ItemsService('reports_competitions', { schema: await getSchema() });
     const voteService = new ItemsService('votes', { schema: await getSchema() });
+    const userService = new ItemsService('directus_users', { schema: await getSchema() });
+    const cardService = new ItemsService('sorare_cards', { schema: await getSchema() });
 
     const metaService = new MetaService({
         schema: await getSchema(),
@@ -134,13 +136,10 @@ export default async ({ services, exceptions, logger, getSchema, env, respond, c
                     },
                     params: {
                         ...req.query,
-                        ...(req.query.filter && {
-                            filter: {
-                                ...JSON.parse(req.query.filter || "{}"),
-                                user: req.accountability.user
-                            }
-                        })
-
+                        filter: {
+                            ...JSON.parse(req.query.filter || "{}"),
+                            user: req.accountability.user
+                        }
                     }
                 }).then(res => res.data)
 
@@ -171,13 +170,46 @@ export default async ({ services, exceptions, logger, getSchema, env, respond, c
                 let { limit = 10, page = 1 } = req.query
 
                 let {
+                    user,
                     category,
                     players,
                     teams,
                     competitions,
-                    gallery,
+                    sorare = false,
                     favorites,
                 } = JSON.parse(req.query.filter || "{}")
+
+                console.log({
+                    user,
+                    category,
+                    players,
+                    teams,
+                    competitions,
+                    sorare,
+                    favorites,
+                })
+
+                let sorare_cards = []
+                if (sorare) {
+                    // * Get Sorare account for this user
+                    let sorare_account = await userService.readOne(user, {
+                        fields: [
+                            "sorare_account"
+                        ]
+                    }).then(res => res.sorare_account).catch(err => null)
+
+                    // * Get Sorare cards for this account
+                    sorare_cards = sorare_account ? await cardService.readByQuery({
+                        filter: {
+                            sorare_account: { _eq: sorare_account }
+                        },
+                        fields: [
+                            "player"
+                        ],
+                        limit: -1
+                    }).then(res => res.map(e => e.player)) : []
+
+                }
 
                 let filter = {
                     score: { _gte: -5 },
@@ -186,6 +218,13 @@ export default async ({ services, exceptions, logger, getSchema, env, respond, c
                         players: {
                             player: {
                                 slug: { _in: players.split(',') },
+                            },
+                        },
+                    }),
+                    ...(sorare && {
+                        players: {
+                            player: {
+                                id: { _in: sorare_cards },
                             },
                         },
                     }),
@@ -362,7 +401,13 @@ export default async ({ services, exceptions, logger, getSchema, env, respond, c
         async (req, res, next) => {
             try {
 
+                let date = new Date()
+                date.setDate(date.getDate() - 7);
+
                 let results = await reportService.readByQuery({
+                    filter: {
+                        date_created: { _gte: date.toISOString() }
+                    },
                     fields: [
                         "id",
                         "title",
